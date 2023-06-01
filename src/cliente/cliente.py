@@ -1,6 +1,6 @@
 class Cliente:
     def __init__(self, id=0):
-        self.__id = None
+        self.__id = id
         self.__socket = None
         self.__nome = None
         self.__ip = None
