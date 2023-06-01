@@ -74,3 +74,5 @@ class Cliente:
     def set_id(self, new_id):
         self.__id = new_id
 
+    def __repr__(self) -> str:
+        return f"(id={self.__id}, ip={self.__ip})"

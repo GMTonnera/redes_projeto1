@@ -32,4 +32,23 @@ class MensagemSocilitarEntrarFila(MensagemProtocolo):
     def __init__(self):
         super().__init__({"Tipo": "Solicitação",
                          "Ação": "Entrar na fila"})
+
+
+class MensagemSolicitarCriacaoJogador(MensagemProtocolo):
+    def __init__(self, id):
+        super().__init__({"Tipo": "Solicitação",
+                          "Ação": "Criar jogador",
+                          "Cliente": id})
+
+class MensagemRespostaConexaoAceita(MensagemProtocolo):
+    def __init__(self, id):
+        super().__init__({"Tipo": "Resposta",
+                          "Descrição": "A conexão foi estabelecida com sucesso!",
+                          "IdCliente": id})
+
+
+class MensagemRespostaEntrarFila(MensagemProtocolo):
+    def __init__(self):
+        super().__init__({"Tipo": "Resposta",
+                          "Descrição": "O cliente foi adicionado à fila com sucesso!"})
         
