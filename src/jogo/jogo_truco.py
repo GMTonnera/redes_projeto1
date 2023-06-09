@@ -106,9 +106,12 @@ class JogoTruco:
 
 
     def update_fila_jogadores(self):
-        for _ in range(4):    
+        last = self.__fila_jogadores.pop(0)
+        for _ in range(3):    
             j = self.__fila_jogadores.pop(0)
             self.__fila_jogadores.append(j)
+        
+        self.__fila_jogadores.append(last)
 
     
     def limpar_baralho_jogadores(self):

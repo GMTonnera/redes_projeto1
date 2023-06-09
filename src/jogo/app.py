@@ -10,7 +10,7 @@ from dupla import Dupla
 from jogador import Jogador
 from unicode_chars import *
 from log_mensagens import LedgerMessages
-from mensagem import InicioRodadaMensagem, VezJogarMensagem, CartaJogadaMensagem, EmpatePartidaMensagem, GanhadorPartidaMensagem,GanhadorRodadaMenagem 
+from mensagem import InicioRodadaMensagem, CartaJogadaMensagem, EmpatePartidaMensagem, GanhadorPartidaMensagem,GanhadorRodadaMenagem 
 
 
 class App:
@@ -46,8 +46,6 @@ class App:
         self.__gameFrame.set_pixels(GAME_SCREEN)
 
         
-
-
     def menu(self):
         while True:
             self.__window.clear()
@@ -109,15 +107,18 @@ class App:
                 # Adquirir as cartas que cada jogador descartou
                 for _ in range(4):
                     jogador = rodada.next_jogador()
-                    if jogador == self.__trucoGame.get_dupla1().get_jogador1():
-                        # Adquirir a carta que o jogador1 escolheu descartar
-                        c = self.get_input_jogador()
-                        
-                    else:
-                        # Adquirir as cartas dos demais jogadores
-                        c = jogador.descartar_carta_random()
                     
-                    self.handle_input(c, jogador, partida)
+                    while True:
+                        if jogador == self.__trucoGame.get_dupla1().get_jogador1():
+                            # Adquirir a carta que o jogador1 escolheu descartar
+                            c = self.get_input_jogador()
+                            
+                        else:
+                            # Adquirir as cartas dos demais jogadores
+                            c = jogador.descartar_carta_random()
+                        
+                        if self.handle_input(c, jogador, partida):
+                            break    
                     
 
                 # Verificar vencedor da partida
@@ -774,10 +775,10 @@ class App:
     
 
     def handle_input(self, char, jogador, partida):
-        if char.isdigit():
-            if 0 < int(char)-48 <= jogador.get_baraho().get_num_cartas():
+        if 49 <= char <= 51:
+            if 0 < char-48 <= jogador.get_baralho().get_num_cartas():
                 # Jogador descarta carta escolhida
-                carta = jogador.descartar_carta(int(char)-48)
+                carta = jogador.descartar_carta(char-48)
                 # Fazer a aniamacao de descarte
                 if jogador == self.__trucoGame.get_dupla1().get_jogador1():
                     self.descartar_carta_player1_animation(carta)
@@ -794,34 +795,31 @@ class App:
                 # Criar mensagem de carta descartada
                 self.__ledger.add_mensagem(CartaJogadaMensagem(jogador, carta))
                 self.draw_messages()
+
+                return True
         
-        else:
-            if char == 't' and len(partida.get_rodada().partidas()) > 1:
-                self.handle_truco_input()
-
-
-    def handle_truco_input(self, jogador1, jogador2, partida):
-        if jogador2 == self.__trucoGame.get_dupla1().get_jogador1():
-            char = self.get_input_jogador()
+        # Pedir 
+        elif char == ord('t'):
+            partida.get_rodada().set_estado(1, jogador)
+            
         
-        else:
-            char = random.choice(['a', 'f', '6'])
+        # Aceitar 
+        elif char == ord('a'):
+            partida.get_rodada().set_estado(2, jogador)
+            
+        # Fugir  
+        elif char == ord('f'):
+            partida.get_rodada().set_estado(4, jogador)
+            estado =  partida.get_rodada().get_estado()
+            
+        # Aumentar
+        elif char == ord('g'):
+            partida.get_rodada().set_estado(3, jogador)
+            
+
+        return False
         
-        rodada = self.partida.get_rodada()    
-        if char == 'a':
-            rodada.set_estado(1)
-            rodada.set_pontos(3)
-
-        elif char == 'f':
-            rodada.set_dupla_vencedora(jogador1.get_dupla())
-
-        elif char == '6':
-            rodada.set_estado(1)
-            rodada.set_pontos(3)
-            self.handle_6_input(jogador2, jogador1, partida)
 
 
-    def handle_6_input(self, jogador1, jogador2, partida):
-        pass
 
             

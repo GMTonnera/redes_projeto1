@@ -11,6 +11,8 @@ class Rodada:
         self.__estado = 0
         self.__fila_jogadores = fila
         self.__jogadores = []
+        self.__g = 1
+        self.__pediu_truco = None
         
     
     def get_num(self):
@@ -61,8 +63,25 @@ class Rodada:
         return self.__estado
     
 
-    def set_estado(self, new_estado):
+    def set_estado(self, new_estado, jogador):
         self.__estado = new_estado
+        
+        if self.__estado == 1:
+            self.__pediu_truco = jogador.get_dupla()
+
+        elif self.__estado == 2:
+            self.__pontos = 3
+
+        elif self.__estado == 3:
+            self.__g += 1
+            self.__pontos = 3*self.__g 
+            self.__pediu_truco = jogador.get_dupla()
+            
+        elif self.__estado == 4:
+            if self.__g > 1:
+                self.__pontos -= 3
+            self.__pediu_truco.add_pontos(self.__pontos)
+            self.__dupla_vencedora = self.__pediu_truco
 
 
     def next_jogador(self):
@@ -72,53 +91,57 @@ class Rodada:
 
 
     def verificar_vencedor(self):
-        if len(self.__partidas) == 2:
-            if self.__partidas[0].get_vencedor() is None:
-                self.__dupla_vencedora = self.__partidas[1].get_vencedor().get_dupla()  
-                self.__dupla_vencedora.add_pontos(self.__pontos)
-                return True
-            
-            else:
-                if self.__partidas[1].get_vencedor() is None:
-                    self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
+        if self.__dupla_vencedora is None:
+            if len(self.__partidas) == 2:
+                if self.__partidas[0].get_vencedor() is None:
+                    self.__dupla_vencedora = self.__partidas[1].get_vencedor().get_dupla()  
                     self.__dupla_vencedora.add_pontos(self.__pontos)
                     return True
+                
                 else:
-                    if self.__partidas[0].get_vencedor() == self.__partidas[1].get_vencedor():
+                    if self.__partidas[1].get_vencedor() is None:
                         self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
                         self.__dupla_vencedora.add_pontos(self.__pontos)
                         return True
                     else:
-                        if self.__partidas[0].get_vencedor().get_dupla() == self.__partidas[1].get_vencedor().get_dupla():
+                        if self.__partidas[0].get_vencedor() == self.__partidas[1].get_vencedor():
                             self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
                             self.__dupla_vencedora.add_pontos(self.__pontos)
                             return True
-            
-
-        elif len(self.__partidas) == 3:
-            if self.__partidas[-1].get_vencedor() is None:
-                self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
-                self.__dupla_vencedora.add_pontos(self.__pontos)
-                return True
-            else:
-                d1 = 0
-                d2 = 0
-                for partida in self.__partidas:
-                    if partida.get_vencedor() in (self.__jogo.get_dupla1().get_jogador1(), self.__jogo.get_dupla1().get_jogador2()):
-                        d1 += 1
-                    else:
-                        d2 += 1
+                        else:
+                            if self.__partidas[0].get_vencedor().get_dupla() == self.__partidas[1].get_vencedor().get_dupla():
+                                self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
+                                self.__dupla_vencedora.add_pontos(self.__pontos)
+                                return True
                 
-                if d1 > d2:
-                    self.__dupla_vencedora = self.__jogo.get_dupla1()
+
+            elif len(self.__partidas) == 3:
+                if self.__partidas[-1].get_vencedor() is None:
+                    self.__dupla_vencedora = self.__partidas[0].get_vencedor().get_dupla()
                     self.__dupla_vencedora.add_pontos(self.__pontos)
                     return True
                 else:
-                    self.__dupla_vencedora = self.__jogo.get_dupla2()
-                    self.__dupla_vencedora.add_pontos(self.__pontos)
-                    return True
+                    d1 = 0
+                    d2 = 0
+                    for partida in self.__partidas:
+                        if partida.get_vencedor() in (self.__jogo.get_dupla1().get_jogador1(), self.__jogo.get_dupla1().get_jogador2()):
+                            d1 += 1
+                        else:
+                            d2 += 1
+                    
+                    if d1 > d2:
+                        self.__dupla_vencedora = self.__jogo.get_dupla1()
+                        self.__dupla_vencedora.add_pontos(self.__pontos)
+                        return True
+                    else:
+                        self.__dupla_vencedora = self.__jogo.get_dupla2()
+                        self.__dupla_vencedora.add_pontos(self.__pontos)
+                        return True
+            else:
+                return False
+        
         else:
-            return False
+            return True
 
 
     def init_partida(self):

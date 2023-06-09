@@ -58,7 +58,7 @@ class Jogador:
 
 
     def descartar_carta_random(self):
-        return self.__baralho.pop_carta_na_pos(random.randint(0, len(self.__baralho.get_cartas())-1))
+        return random.randint(49, 48+len(self.__baralho.get_cartas()))
 
 
     def __repr__(self) -> str:
