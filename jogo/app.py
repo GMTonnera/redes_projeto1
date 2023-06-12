@@ -51,8 +51,8 @@ class App:
                     socketJogador = jogador.get_socket()
                     self.enviarPacote(f"seuturno 0", jogador.get_id())
                     c = int(socketJogador.recv(1024).decode("utf-8"))
-                    self.handle_input(c, jogador, partida)
-                    self.enviarPacoteTodos(f"desenharcarta {self.__trucoGame.get_rodada_atual().get_num_partidas()} {jogador.descartar_carta(c-48).get_char()} {jogador.get_offset()}")
+                    carta = self.handle_input(c, jogador, partida)
+                    self.enviarPacoteTodos(f"desenharcarta {self.__trucoGame.get_rodada_atual().get_num_partidas()} {carta.get_char()} {jogador.get_offset()}")
                     
 
                 # Verificar vencedor da partida
@@ -209,6 +209,7 @@ class App:
                 print(msg.get_descricao())
 
                 #return True
+                return carta
         
         # Pedir 
         elif char == ord('t'):

@@ -167,7 +167,7 @@ class JogoCliente:
 
 
                 elif tipo == "placar": 
-                    self.__placar = tuple(data.split().map(int))
+                    self.__placar = tuple(data.split())
 
                 elif tipo == "finalpartida":
                     self.final_partida_animation()
