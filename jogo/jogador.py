@@ -4,13 +4,14 @@ from baralho import Baralho
 
 
 class Jogador:
-    def __init__(self, _id, nome, dupla, pos, socket) -> None:
+    def __init__(self, _id, nome, dupla, pos, socket, offset) -> None:
         self.__id = _id
         self.__nome = nome
         self.__baralho = Baralho(self)
         self.__dupla = dupla
         self.__pos = pos
         self.__socket = socket
+        self.__offset = offset
 
 
     def get_id(self):
@@ -52,6 +53,13 @@ class Jogador:
     def set_pos(self, pos):
         self.__pos = pos
 
+
+    def get_socket(self):
+        return self.__socket
+
+
+    def get_offset(self):
+        return self.__offset
 
 
     def descartar_carta(self, num):

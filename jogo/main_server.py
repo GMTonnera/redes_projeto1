@@ -30,10 +30,11 @@ for i in range(4):
     clientesConectados += 1
 
 
-for i in clientes:
-        i[1].sendall(f"start {clientes[0][0]} {clientes[1][0]} {clientes[2][0]} {clientes[3][0]}".encode("utf-8"))
+for i in range(len(clientes)):
+        clientes[i][1].sendall(f"start {i} {clientes[0][0]} {clientes[1][0]} {clientes[2][0]} {clientes[3][0]}".encode("utf-8"))
+        clientes[i][1].recv(1024).decode("utf-8")
 
-
+print("start")
 jogo = app.App(clientes)
 jogo.main()
 
