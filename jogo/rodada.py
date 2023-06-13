@@ -11,7 +11,7 @@ class Rodada:
         self.__estado = 0
         self.__fila_jogadores = fila
         self.__jogadores = []
-        self.__g = 1
+        self.__g = 0
         self.__pediu_truco = None
         
     
@@ -62,6 +62,8 @@ class Rodada:
     def get_estado(self):
         return self.__estado
     
+    def set_pediu_truco(self, dupla):
+        self.__pediu_truco = dupla
 
     def set_estado(self, new_estado, jogador):
         self.__estado = new_estado
@@ -69,8 +71,8 @@ class Rodada:
         if self.__estado == 1:
             self.__pediu_truco = jogador.get_dupla()
 
-        elif self.__estado == 2:
-            self.__pontos = 3
+        #elif self.__estado == 2:
+            #self.__pontos = 3
 
         elif self.__estado == 3:
             self.__g += 1
@@ -88,6 +90,10 @@ class Rodada:
         jogador = self.__fila_jogadores.pop(0)
         self.__jogadores.append(jogador)
         return jogador
+    
+    
+    def get_next_jogador(self):
+        return self.__fila_jogadores[0]
 
 
     def verificar_vencedor(self):

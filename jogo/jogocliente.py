@@ -89,6 +89,10 @@ class JogoCliente:
             self.__socket.connect(self.__address)
             self.__socket.sendall(self.__nome.encode("utf-8"))
         except:
+            curses.echo()
+            curses.curs_set(1)
+            curses.nocbreak()
+            curses.endwin()  
             print("falha na conexão")
             raise SystemExit
        
@@ -121,12 +125,12 @@ class JogoCliente:
     def game(self):
         self.__thread = Thread(target=self.threadEscuta, daemon=True)
         self.__thread.start()
-        
+        self.__window.clear()
+        self.draw_placar()
+
         
         while True:
-            self.__window.clear()
-            self.draw_frame()
-            self.draw_placar()
+
             if len(self.__fila) > 0:
                 tipo, data = self.__fila.pop(0)
                 if tipo == "recebercarta":
@@ -135,15 +139,25 @@ class JogoCliente:
                     self.entregar_carta_animation2()
                     self.entregar_carta_animation3()
                     self.entregar_carta_animation4()                        
-                    self.__window.clear()
+                    self.draw_cartas_jogador1()
                     self.draw_frame()
 
 
                 elif tipo == "seuturno":
-                    self.__ledger.add_mensagem((5, "Sua vez!"))
-                    self.draw_messages()
-                    c = str(self.get_input_jogador())
-                    self.__socket.sendall(c.encode("utf-8"))
+                    if data == '0':
+                        self.__ledger.add_mensagem((5, "Sua vez!"))
+                        self.draw_messages()
+                        c = self.get_input_jogador()
+                        if (c != ord('t')) and (c != ord('f')):
+                            self.__cards.pop(int(c)-49)
+
+                    elif data == '1':
+                        self.__ledger.add_mensagem((5, "Aceita, aumenta ou foge?"))
+                        self.draw_messages()
+                        c = self.get_input_jogador()
+                    
+                    self.__socket.sendall(str(c).encode("utf-8"))
+
 
 
                 elif tipo == "menssagem":
@@ -164,12 +178,17 @@ class JogoCliente:
                         self.descartar_carta_player3_animation(carta, numPartidas)
                     elif (offset == 3) or (offset == -1):
                         self.descartar_carta_player4_animation(carta, numPartidas)
+                    self.draw_cartas_jogador1()
+                    self.draw_frame()
 
 
                 elif tipo == "placar": 
                     self.__placar = tuple(data.split())
+                    self.draw_placar()
 
                 elif tipo == "finalpartida":
+                    self.cartaVencedora(int(data))
+                    
                     self.final_partida_animation()
 
 
@@ -178,11 +197,14 @@ class JogoCliente:
                     self.__cards.clear()
 
 
-                elif tipo == "teste":
+                elif tipo == "fim":
                     curses.echo()
+                    curses.curs_set(1)
                     curses.nocbreak()
                     curses.endwin()    
                     
+                    print(f"{[self.__dupla1, self.__dupla2][int(data)]} venceu!")
+
                     raise SystemExit
 
             
@@ -208,12 +230,7 @@ class JogoCliente:
             elif self.__state == 2:
                 self.game()    
         
-        # Resetar configuracoes do terminal
-        curses.echo()
-        curses.nocbreak()
-
-        # Fechar janela
-        curses.endwin()    
+   
 
 
     def draw_frame(self):
@@ -221,13 +238,13 @@ class JogoCliente:
             for x in range(FRAME_WIDTH):
                 try:
                     if self.__state == 0:
-                        self.__window.addch(y, x, ord(self.__menuFrame.get_pixel(x, y).get_char()), curses.color_pair(self.__menuFrame.get_pixel(x, y).get_color()))
+                        self.__window.addch(y, x, self.__menuFrame.get_pixel(x, y).get_char(), curses.color_pair(self.__menuFrame.get_pixel(x, y).get_color()))
 
                     elif self.__state == 1:
-                        self.__window.addch(y, x, ord(self.__queueFrame.get_pixel(x, y).get_char()), curses.color_pair(self.__queueFrame.get_pixel(x, y).get_color()))
+                        self.__window.addch(y, x, self.__queueFrame.get_pixel(x, y).get_char(), curses.color_pair(self.__queueFrame.get_pixel(x, y).get_color()))
                         
                     elif self.__state == 2:
-                        self.__window.addch(y, x, ord(self.__gameFrame.get_pixel(x, y).get_char()), curses.color_pair(self.__gameFrame.get_pixel(x, y).get_color()))
+                        self.__window.addch(y, x, self.__gameFrame.get_pixel(x, y).get_char(), curses.color_pair(self.__gameFrame.get_pixel(x, y).get_color()))
                     
                 except:
                     pass
@@ -526,32 +543,15 @@ class JogoCliente:
 
 
     def draw_cartas_jogador1(self):
+        for i in range(3):
+            self.__gameFrame.set_pixel_char(48+i*2, 27, " ")
+            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO) 
         for i in range(len(self.__cards)):
             self.__gameFrame.set_pixel_char(48+i*2, 27, self.__cards[i])
-            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO)
-        
+            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO)      
         self.draw_frame()
 
-    def draw_cartas_jogador2(self):
-        for i in range(len(self.__cards)):
-            self.__gameFrame.set_pixel_char(48+i*2, 27, self.__cards[i])
-            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO)
-        
-        self.draw_frame()
 
-    def draw_cartas_jogador3(self):
-        for i in range(len(self.__cards)):
-            self.__gameFrame.set_pixel_char(48+i*2, 27, self.__cards[i])
-            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO)
-        
-        self.draw_frame()
-
-    def draw_cartas_jogador4(self):
-        for i in range(len(self.__cards)):
-            self.__gameFrame.set_pixel_char(48+i*2, 27, self.__cards[i])
-            self.__gameFrame.set_pixel_color(48+i*2, 27, PRETO_BRANCO)
-        
-        self.draw_frame()
 
 
     def get_input_jogador(self):
@@ -568,7 +568,7 @@ class JogoCliente:
         for i in range(len(dupla2_str)):
             self.__gameFrame.set_pixel_char(i+1, 36, dupla2_str[i])
 
-        #self.draw_frame()
+        self.draw_frame()
 
 
     def draw_messages(self):
@@ -596,17 +596,6 @@ class JogoCliente:
     def descartar_carta_player1_animation(self, carta, num_partidas):
         self.__gameFrame.set_pixel_char(50, 22, carta)
         self.draw_cartas_jogador1()
-        if num_partidas == 1:
-            self.__gameFrame.set_pixel_char(52, 27, " ")
-            self.__gameFrame.set_pixel_color(52, 27, PRETO_BRANCO)
-
-        elif num_partidas == 2:
-            self.__gameFrame.set_pixel_char(50, 27, " ")
-            self.__gameFrame.set_pixel_color(50, 27, PRETO_BRANCO)
-
-        else:
-            self.__gameFrame.set_pixel_char(48, 27, " ")
-            self.__gameFrame.set_pixel_color(48, 27, PRETO_BRANCO)
         
         self.draw_frame()
 
@@ -662,7 +651,41 @@ class JogoCliente:
         self.draw_frame()
 
 
-    def final_partida_animation(self):      
+
+    def cartaVencedora(self, data):
+        if data == -1:
+            time.sleep(3)
+            return
+        
+        offset = data - self.__jogador
+        if offset == 0:
+            self.__gameFrame.set_pixel_color(50, 22, PRETO_VERDE)
+            self.draw_frame()
+            time.sleep(3)
+            self.__gameFrame.set_pixel_color(50, 22, PRETO_BRANCO)
+
+        elif (offset == 1) or (offset == -3):
+            self.__gameFrame.set_pixel_color(58, 18, PRETO_VERDE)
+            self.draw_frame()
+            time.sleep(3)
+            self.__gameFrame.set_pixel_color(58, 18, PRETO_BRANCO)
+
+        elif (offset == 2) or (offset == -2):
+            self.__gameFrame.set_pixel_color(50, 14, PRETO_VERDE)
+            self.draw_frame()
+            time.sleep(3)
+            self.__gameFrame.set_pixel_color(50, 14, PRETO_BRANCO)
+
+        elif (offset == 3) or (offset == -1):
+            self.__gameFrame.set_pixel_color(41, 18, PRETO_VERDE)
+            self.draw_frame()
+            time.sleep(3)
+            self.__gameFrame.set_pixel_color(41, 18, PRETO_BRANCO)
+        
+
+
+
+    def final_partida_animation(self):             
         # Recolher cartas
         c1 = self.__gameFrame.get_pixel(50, 22).get_char()
         c2 = self.__gameFrame.get_pixel(58, 18).get_char()
@@ -703,6 +726,7 @@ class JogoCliente:
 
 
     def final_rodada_animation(self):
+        time.sleep(3)
         # Limpar Mesa
         for y in range(10, 28):
             for x in range(31, 69):

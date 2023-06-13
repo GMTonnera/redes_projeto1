@@ -48,30 +48,67 @@ class App:
                 # Adquirir as cartas que cada jogador descartou
                 for i in range(4):
                     jogador = rodada.next_jogador()
+
+                    #mega gambiarra 
+                    
+                    if jogador.get_dupla() == self.__trucoGame.get_dupla1():
+                        rodada.set_pediu_truco(self.__trucoGame.get_dupla2())
+                    else:
+                        rodada.set_pediu_truco(self.__trucoGame.get_dupla1())
+
                     socketJogador = jogador.get_socket()
                     self.enviarPacote(f"seuturno 0", jogador.get_id())
                     c = int(socketJogador.recv(1024).decode("utf-8"))
+                    
+                    
+                    #gambiarra suprema nao ta pronto essa bosta
+                    if False:#c == ord('t'):
+                        self.handle_input(c, jogador, partida)
+                        self.enviarPacoteTodos(f"menssagem 5 {jogador.get_nome()} pediu truco")
+                        self.enviarPacote(f"seuturno 1", proxjogador.get_id())
+                        r = int(proxjogador.get_socket().recv(1024).decode("utf-8"))
+                       
+                        if r == ord('f'):
+                            self.handle_input(c, proxjogador, partida)
+                            break
+                        elif (r == ord('t')):
+                            self.enviarPacoteTodos(f"menssagem 5 {proxjogador.get_nome()} aumentou")
+                            self.handle_input(c, proxjogador, partida)
+                            c = int(socketJogador.recv(1024).decode("utf-8"))
+                        elif (r == ord('a')):
+                            self.enviarPacoteTodos(f"menssagem 5 {proxjogador.get_nome()} aceitou")
+                            self.handle_input(c, proxjogador, partida)
+                            c = int(socketJogador.recv(1024).decode("utf-8"))
+
+
+                    if c == ord('f'):
+                        self.handle_input(c, jogador, partida)
+                        break
+                    
+                    
                     carta = self.handle_input(c, jogador, partida)
                     self.enviarPacoteTodos(f"desenharcarta {self.__trucoGame.get_rodada_atual().get_num_partidas()} {carta.get_char()} {jogador.get_offset()}")
                     
-
-                # Verificar vencedor da partida
-                partida.verificar_vencedor()
-                self.enviarPacoteTodos("finalpartida 0")
-                #self.final_partida()
-                if partida.get_vencedor() is None:
-                    msg = EmpatePartidaMensagem(len(rodada.get_partidas()))
-                    self.enviarPacoteTodos(f"menssagem {msg.get_cor()} {msg.get_descricao()}")
-                    print(msg.get_descricao())
-                
                 else:
-                    msg = GanhadorPartidaMensagem(partida.get_vencedor(), len(rodada.get_partidas()))
-                    self.enviarPacoteTodos(f"menssagem {msg.get_cor()} {msg.get_descricao()}")
-                    print(msg.get_descricao())
+                    # Verificar vencedor da partida
+                    partida.verificar_vencedor()
+                    #self.final_partida()
+                    
+                    if partida.get_vencedor() is None:
+                        msg = EmpatePartidaMensagem(len(rodada.get_partidas()))
+                        self.enviarPacoteTodos(f"menssagem {msg.get_cor()} {msg.get_descricao()}")
+                        print(msg.get_descricao())
+                        self.enviarPacoteTodos("finalpartida -1")
+                    
+                    else:
+                        msg = GanhadorPartidaMensagem(partida.get_vencedor(), len(rodada.get_partidas()))
+                        self.enviarPacoteTodos(f"menssagem {msg.get_cor()} {msg.get_descricao()}")
+                        print(msg.get_descricao())
+                        self.enviarPacoteTodos(f"finalpartida {partida.get_vencedor().get_offset()}")
 
 
-                # Atualizar fila de jogadores
-                rodada.update_fila_jogadores() 
+                    # Atualizar fila de jogadores
+                    rodada.update_fila_jogadores() 
 
                 # Verificar vencedor da rodada
                 rodada.verificar_vencedor()
@@ -96,15 +133,21 @@ class App:
 
             self.enviarPacoteTodos(f"placar {self.__trucoGame.get_dupla1().get_pontos()} {self.__trucoGame.get_dupla2().get_pontos()}")
 
-            #c = self.__window.getch()
-            #if c == ord("x"):
-                #self.__state = -1
-                #break
+            
+            if (self.__trucoGame.get_dupla1().get_pontos() >= 12):
+                print(f"Dupla vencedora: {self.__trucoGame.get_dupla1()}\n{self.__trucoGame.get_dupla2()}")
+                self.enviarPacoteTodos("fim 0")
+                return 
+            
+            elif (self.__trucoGame.get_dupla2().get_pontos() >= 12):
+                print(f"Dupla vencedora: {self.__trucoGame.get_dupla2()}\n{self.__trucoGame.get_dupla1()}")
+                self.enviarPacoteTodos("fim 1")
+                return 
+
 
 
     def main(self):
-        while True: 
-            self.game()    
+        self.game()    
 
     
 
@@ -179,7 +222,7 @@ class App:
                 cartasString.append(str(card.get_char()))
             #socket = self.__jogadores[i][1]
             #socket.sendall("teste 0".encode("utf-8"))
-            self.enviarPacote(f"recebercarta {' '.join(cartasString)}", i)
+            self.enviarPacote(f"recebercarta {' '.join(cartasString)}", player.get_id())
 
             queue.append(player)
 
@@ -212,8 +255,8 @@ class App:
                 return carta
         
         # Pedir 
-        elif char == ord('t'):
-            partida.get_rodada().set_estado(1, jogador)
+        #elif char == ord('t'):
+        #    partida.get_rodada().set_estado(1, jogador)
             
         
         # Aceitar 
@@ -225,8 +268,8 @@ class App:
             partida.get_rodada().set_estado(4, jogador)
             estado =  partida.get_rodada().get_estado()
             
-        # Aumentar
-        elif char == ord('g'):
+        # Aumentar/pedir truco
+        elif char == ord('t'):
             partida.get_rodada().set_estado(3, jogador)
             
 
